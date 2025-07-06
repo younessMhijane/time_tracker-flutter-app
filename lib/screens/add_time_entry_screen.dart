@@ -6,7 +6,9 @@ import '../models/project.dart';
 import '../models/task.dart';
 import '../providers/time_entry_provider.dart';
 import '../providers/project_task_provider.dart';
-
+const _kDefaultPadding = 16.0;
+const _kCardRadius = 12.0;
+const _kButtonRadius = 10.0;
 class AddTimeEntryScreen extends StatefulWidget {
   @override
   _AddTimeEntryScreenState createState() => _AddTimeEntryScreenState();
@@ -80,10 +82,10 @@ class _AddTimeEntryScreenState extends State<AddTimeEntryScreen> {
               Card(
                 elevation: 2,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(_kCardRadius),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.all(_kDefaultPadding),
                   child: Column(
                     children: [
                       DropdownButtonFormField<String>(
@@ -151,10 +153,10 @@ class _AddTimeEntryScreenState extends State<AddTimeEntryScreen> {
               Card(
                 elevation: 2,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(_kCardRadius),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.all(_kDefaultPadding),
                   child: Column(
                     children: [
                       TextFormField(
@@ -203,10 +205,10 @@ class _AddTimeEntryScreenState extends State<AddTimeEntryScreen> {
               Card(
                 elevation: 2,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(_kCardRadius),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.all(_kDefaultPadding),
                   child: TextFormField(
                     controller: _notesController,
                     decoration: InputDecoration(
@@ -223,8 +225,9 @@ class _AddTimeEntryScreenState extends State<AddTimeEntryScreen> {
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(_kButtonRadius),
                   ),
+                
                 ),
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {

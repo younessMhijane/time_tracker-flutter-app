@@ -66,47 +66,69 @@ class HomeScreen extends StatelessWidget {
                 orElse: () => Task(id: '', name: 'Tâche inconnue', projectId: ''),
               );
 
-              return Card(
-                margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: ListTile(
-                  contentPadding: EdgeInsets.all(16),
-                  leading: CircleAvatar(
-                    backgroundColor: Theme.of(context).primaryColor,
-                    child: Text(
-                      '${entry.totalTime}h',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                  title: Text(
-                    '${project.name} - ${task.name}',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SizedBox(height: 4),
-                      Text(
-                        DateFormat('dd/MM/yyyy HH:mm').format(entry.date),
-                        style: TextStyle(color: Colors.grey[600]),
-                      ),
-                      if (entry.notes.isNotEmpty) ...[
-                        SizedBox(height: 4),
-                        Text(
-                          entry.notes,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ],
-                  ),
-                  trailing: IconButton(
-                    icon: Icon(Icons.delete, color: Colors.red),
-                    onPressed: () {
-                      _showDeleteDialog(context, provider, entry.id);
-                    },
+return Card(
+  margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+  elevation: 2,
+  shape: RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(10),
+  ),
+  child: InkWell(
+    borderRadius: BorderRadius.circular(10),
+    onTap: () {
+      // Option: Ajouter une action quand on clique sur une entrée
+    },
+    child: Padding(
+      padding: EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                backgroundColor: Theme.of(context).primaryColor.withOpacity(0.2),
+                child: Text(
+                  '${entry.totalTime}h',
+                  style: TextStyle(
+                    color: Theme.of(context).primaryColor,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-              );
+              ),
+              SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  '${project.name} - ${task.name}',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+              IconButton(
+                icon: Icon(Icons.delete, color: Colors.red[300]),
+                onPressed: () {
+                  _showDeleteDialog(context, provider, entry.id);
+                },
+              ),
+            ],
+          ),
+          SizedBox(height: 8),
+          Text(
+            DateFormat('dd/MM/yyyy HH:mm').format(entry.date),
+            style: TextStyle(color: Colors.grey[600]),
+          ),
+          if (entry.notes.isNotEmpty) ...[
+            SizedBox(height: 8),
+            Text(
+              entry.notes,
+              style: TextStyle(color: Colors.grey[700]),
+            ),
+          ],
+        ],
+      ),
+    ),
+  ),
+);
             },
           );
         },
