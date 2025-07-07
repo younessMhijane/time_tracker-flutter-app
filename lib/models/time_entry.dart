@@ -6,7 +6,7 @@ class TimeEntry {
   final DateTime date;
   final String notes;
 
-  TimeEntry({
+  const TimeEntry({
     required this.id,
     required this.projectId,
     required this.taskId,
@@ -15,25 +15,60 @@ class TimeEntry {
     required this.notes,
   });
 
-  factory TimeEntry.fromJson(Map<String, dynamic> json) {
+  TimeEntry copyWith({
+    String? id,
+    String? projectId,
+    String? taskId,
+    double? totalTime,
+    DateTime? date,
+    String? notes,
+  }) {
     return TimeEntry(
-      id: json['id'],
-      projectId: json['projectId'],
-      taskId: json['taskId'],
-      totalTime: json['totalTime'],
-      date: DateTime.parse(json['date']),
-      notes: json['notes'],
+      id: id ?? this.id,
+      projectId: projectId ?? this.projectId,
+      taskId: taskId ?? this.taskId,
+      totalTime: totalTime ?? this.totalTime,
+      date: date ?? this.date,
+      notes: notes ?? this.notes,
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'projectId': projectId,
-      'taskId': taskId,
-      'totalTime': totalTime,
-      'date': date.toIso8601String(),
-      'notes': notes,
-    };
-  }
+  factory TimeEntry.fromJson(Map<String, dynamic> json) => TimeEntry(
+        id: json['id'],
+        projectId: json['projectId'],
+        taskId: json['taskId'],
+        totalTime: (json['totalTime'] as num).toDouble(),
+        date: DateTime.parse(json['date']),
+        notes: json['notes'],
+      );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'projectId': projectId,
+        'taskId': taskId,
+        'totalTime': totalTime,
+        'date': date.toIso8601String(),
+        'notes': notes,
+      };
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TimeEntry &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          projectId == other.projectId &&
+          taskId == other.taskId &&
+          totalTime == other.totalTime &&
+          date == other.date &&
+          notes == other.notes;
+
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      projectId.hashCode ^
+      taskId.hashCode ^
+      totalTime.hashCode ^
+      date.hashCode ^
+      notes.hashCode;
 }

@@ -5,32 +5,37 @@ import '../models/task.dart';
 import '../providers/project_task_provider.dart';
 
 class ProjectTaskManagementScreen extends StatelessWidget {
+  const ProjectTaskManagementScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: Text('Gestion des Projets et Tâches'),
-          bottom: TabBar(
+          title: const Text(
+            'Gestion Projets & Tâches',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          bottom: const TabBar(
             tabs: [
-              Tab(icon: Icon(Icons.work)), 
-              Tab(icon: Icon(Icons.task)),
+              Tab(icon: Icon(Icons.work_outline), text: 'Projets'),
+              Tab(icon: Icon(Icons.task_alt), text: 'Tâches'),
             ],
           ),
           actions: [
             IconButton(
-              icon: Icon(Icons.info_outline),
+              icon: const Icon(Icons.info_outline),
               onPressed: () {
                 showDialog(
                   context: context,
                   builder: (ctx) => AlertDialog(
-                    title: Text('Aide'),
-                    content: Text('Ajoutez et gérez vos projets et tâches ici'),
+                    title: const Text('Aide'),
+                    content: const Text('Ajoutez et gérez vos projets et tâches ici.'),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(ctx),
-                        child: Text('OK'),
+                        child: const Text('OK'),
                       ),
                     ],
                   ),
@@ -39,7 +44,7 @@ class ProjectTaskManagementScreen extends StatelessWidget {
             ),
           ],
         ),
-        body: TabBarView(
+        body: const TabBarView(
           children: [
             ProjectsTab(),
             TasksTab(),
@@ -51,8 +56,10 @@ class ProjectTaskManagementScreen extends StatelessWidget {
 }
 
 class ProjectsTab extends StatefulWidget {
+  const ProjectsTab({super.key});
+
   @override
-  _ProjectsTabState createState() => _ProjectsTabState();
+  State<ProjectsTab> createState() => _ProjectsTabState();
 }
 
 class _ProjectsTabState extends State<ProjectsTab> {
@@ -67,6 +74,21 @@ class _ProjectsTabState extends State<ProjectsTab> {
     super.dispose();
   }
 
+  void _addProject(ProjectTaskProvider provider) {
+    if (_formKey.currentState!.validate()) {
+      provider.addProject(Project(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        name: _nameController.text,
+        description: _descriptionController.text,
+      ));
+      _nameController.clear();
+      _descriptionController.clear();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Projet ajouté')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<ProjectTaskProvider>(context);
@@ -75,137 +97,46 @@ class _ProjectsTabState extends State<ProjectsTab> {
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
-          Card(
-            elevation: 4,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    TextFormField(
-                      controller: _nameController,
-                      decoration: InputDecoration(
-                        labelText: 'Nom du projet',
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (value) =>
-                          value!.isEmpty ? 'Veuillez entrer un nom' : null,
-                    ),
-                    SizedBox(height: 16),
-                    TextFormField(
-                      controller: _descriptionController,
-                      decoration: InputDecoration(
-                        labelText: 'Description (optionnelle)',
-                        border: OutlineInputBorder(),
-                      ),
-                      maxLines: 2,
-                    ),
-                    SizedBox(height: 16),
-                    ElevatedButton.icon(
-                      icon: Icon(Icons.add),
-                      label: Text('Ajouter Projet'),
-                      onPressed: () {
-                        if (_formKey.currentState!.validate()) {
-                          provider.addProject(Project(
-                            id: DateTime.now().toString(),
-                            name: _nameController.text,
-                            description: _descriptionController.text,
-                          ));
-                          _nameController.clear();
-                          _descriptionController.clear();
-                        }
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          SizedBox(height: 16),
+          _buildForm(context, provider),
+          const SizedBox(height: 16),
           Expanded(
             child: provider.projects.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.work_outline, size: 64, color: Colors.grey),
-                        Text(
-                          'Aucun projet créé',
-                          style: TextStyle(color: Colors.grey),
-                        ),
-                      ],
-                    ),
-                  )
+                ? _buildEmptyState('Aucun projet créé', Icons.work_outline)
                 : ListView.builder(
                     itemCount: provider.projects.length,
                     itemBuilder: (context, index) {
                       final project = provider.projects[index];
                       return Dismissible(
                         key: Key(project.id),
-                        background: Container(color: Colors.red),
-                        confirmDismiss: (direction) async {
-                          return await showDialog(
-                            context: context,
-                            builder: (ctx) => AlertDialog(
-                              title: Text('Confirmer'),
-                              content: Text(
-                                  'Supprimer ce projet et toutes ses tâches associées ?'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(ctx, false),
-                                  child: Text('Annuler'),
-                                ),
-                                TextButton(
-                                  onPressed: () => Navigator.pop(ctx, true),
-                                  child: Text('Supprimer'),
-                                ),
-                              ],
-                            ),
+                        background: _buildDismissBackground(),
+                        direction: DismissDirection.endToStart,
+                        onDismissed: (_) {
+                          provider.deleteProject(project.id);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Projet supprimé')),
                           );
                         },
-                        onDismissed: (direction) {
-                          provider.deleteProject(project.id);
-                        },
                         child: Card(
-                          margin: EdgeInsets.symmetric(vertical: 8),
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           child: ListTile(
                             leading: CircleAvatar(
-                              child: Text(project.name[0].toUpperCase()),
+                              backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                              child: Text(
+                                project.name[0].toUpperCase(),
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ),
                             title: Text(
                               project.name,
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                              style: const TextStyle(fontWeight: FontWeight.bold),
                             ),
                             subtitle: project.description.isNotEmpty
                                 ? Text(project.description)
                                 : null,
-                            trailing: IconButton(
-                              icon: Icon(Icons.delete, color: Colors.red),
-                              onPressed: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (ctx) => AlertDialog(
-                                    title: Text('Confirmer'),
-                                    content: Text(
-                                        'Supprimer ce projet et toutes ses tâches associées ?'),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () => Navigator.pop(ctx),
-                                        child: Text('Annuler'),
-                                      ),
-                                      TextButton(
-                                        onPressed: () {
-                                          provider.deleteProject(project.id);
-                                          Navigator.pop(ctx);
-                                        },
-                                        child: Text('Supprimer'),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
                           ),
                         ),
                       );
@@ -216,22 +147,107 @@ class _ProjectsTabState extends State<ProjectsTab> {
       ),
     );
   }
+
+  Widget _buildForm(BuildContext context, ProjectTaskProvider provider) {
+    return Card(
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              TextFormField(
+                controller: _nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Nom du projet',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) =>
+                    value!.isEmpty ? 'Veuillez entrer un nom' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _descriptionController,
+                decoration: const InputDecoration(
+                  labelText: 'Description (optionnelle)',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 2,
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton.icon(
+                icon: const Icon(Icons.add),
+                label: const Text('Ajouter Projet'),
+                onPressed: () => _addProject(provider),
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(String message, IconData icon) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 60, color: Colors.grey[400]),
+          const SizedBox(height: 8),
+          Text(message, style: const TextStyle(color: Colors.grey)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDismissBackground() {
+    return Container(
+      color: Colors.redAccent,
+      alignment: Alignment.centerRight,
+      padding: const EdgeInsets.only(right: 20),
+      child: const Icon(Icons.delete, color: Colors.white, size: 30),
+    );
+  }
 }
 
+// 🟣 TasksTab : Même refacto avec Dropdown pro + swipe
 class TasksTab extends StatefulWidget {
+  const TasksTab({super.key});
+
   @override
-  _TasksTabState createState() => _TasksTabState();
+  State<TasksTab> createState() => _TasksTabState();
 }
 
 class _TasksTabState extends State<TasksTab> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
-  String _selectedProjectId = '';
+  String? _selectedProjectId;
 
   @override
   void dispose() {
     _nameController.dispose();
     super.dispose();
+  }
+
+  void _addTask(ProjectTaskProvider provider) {
+    if (_formKey.currentState!.validate()) {
+      provider.addTask(Task(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        name: _nameController.text,
+        projectId: _selectedProjectId!,
+      ));
+      _nameController.clear();
+      _selectedProjectId = null;
+      _formKey.currentState!.reset();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Tâche ajoutée')),
+      );
+    }
   }
 
   @override
@@ -242,82 +258,11 @@ class _TasksTabState extends State<TasksTab> {
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
-          Card(
-            elevation: 4,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    DropdownButtonFormField<String>(
-                      value: _selectedProjectId.isEmpty ? null : _selectedProjectId,
-                      decoration: InputDecoration(
-                        labelText: 'Projet associé',
-                        border: OutlineInputBorder(),
-                      ),
-                      items: provider.projects
-                          .map<DropdownMenuItem<String>>((project) {
-                        return DropdownMenuItem<String>(
-                          value: project.id,
-                          child: Text(project.name),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedProjectId = value ?? '';
-                        });
-                      },
-                      validator: (value) =>
-                          value == null ? 'Veuillez sélectionner un projet' : null,
-                    ),
-                    SizedBox(height: 16),
-                    TextFormField(
-                      controller: _nameController,
-                      decoration: InputDecoration(
-                        labelText: 'Nom de la tâche',
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (value) =>
-                          value!.isEmpty ? 'Veuillez entrer un nom' : null,
-                    ),
-                    SizedBox(height: 16),
-                    ElevatedButton.icon(
-                      icon: Icon(Icons.add),
-                      label: Text('Ajouter Tâche'),
-                      onPressed: () {
-                        if (_formKey.currentState!.validate()) {
-                          provider.addTask(Task(
-                            id: DateTime.now().toString(),
-                            name: _nameController.text,
-                            projectId: _selectedProjectId,
-                          ));
-                          _nameController.clear();
-                          _selectedProjectId = '';
-                          _formKey.currentState!.reset();
-                        }
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          SizedBox(height: 16),
+          _buildForm(context, provider),
+          const SizedBox(height: 16),
           Expanded(
             child: provider.tasks.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.task_outlined, size: 64, color: Colors.grey),
-                        Text(
-                          'Aucune tâche créée',
-                          style: TextStyle(color: Colors.grey),
-                        ),
-                      ],
-                    ),
-                  )
+                ? _buildEmptyState('Aucune tâche créée', Icons.task_alt_outlined)
                 : ListView.builder(
                     itemCount: provider.tasks.length,
                     itemBuilder: (context, index) {
@@ -327,42 +272,23 @@ class _TasksTabState extends State<TasksTab> {
                         orElse: () => Project(id: '', name: 'Projet supprimé'),
                       );
 
-                      return Card(
-                        margin: EdgeInsets.symmetric(vertical: 4),
-                        child: ListTile(
-                          leading: Checkbox(
-                            value: false,
-                            onChanged: (value) {},
-                          ),
-                          title: Text(task.name),
-                          subtitle: Text(
-                            'Projet: ${project.name}',
-                            style: TextStyle(color: Colors.grey[600]),
-                          ),
-                          trailing: IconButton(
-                            icon: Icon(Icons.delete, color: Colors.red),
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder: (ctx) => AlertDialog(
-                                  title: Text('Confirmer'),
-                                  content: Text('Supprimer cette tâche ?'),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(ctx),
-                                      child: Text('Annuler'),
-                                    ),
-                                    TextButton(
-                                      onPressed: () {
-                                        provider.deleteTask(task.id);
-                                        Navigator.pop(ctx);
-                                      },
-                                      child: Text('Supprimer'),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
+                      return Dismissible(
+                        key: Key(task.id),
+                        background: _buildDismissBackground(),
+                        direction: DismissDirection.endToStart,
+                        onDismissed: (_) {
+                          provider.deleteTask(task.id);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Tâche supprimée')),
+                          );
+                        },
+                        child: Card(
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          child: ListTile(
+                            leading: const Icon(Icons.task_alt, color: Colors.blueAccent),
+                            title: Text(task.name),
+                            subtitle: Text('Projet: ${project.name}'),
                           ),
                         ),
                       );
@@ -371,6 +297,84 @@ class _TasksTabState extends State<TasksTab> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildForm(BuildContext context, ProjectTaskProvider provider) {
+    return Card(
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              DropdownButtonFormField<String>(
+                value: _selectedProjectId,
+                decoration: const InputDecoration(
+                  labelText: 'Projet associé',
+                  border: OutlineInputBorder(),
+                ),
+                items: provider.projects
+                    .map((project) => DropdownMenuItem<String>(
+                          value: project.id,
+                          child: Text(project.name),
+                        ))
+                    .toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedProjectId = value;
+                  });
+                },
+                validator: (value) =>
+                    value == null ? 'Veuillez sélectionner un projet' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Nom de la tâche',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) =>
+                    value!.isEmpty ? 'Veuillez entrer un nom' : null,
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton.icon(
+                icon: const Icon(Icons.add),
+                label: const Text('Ajouter Tâche'),
+                onPressed: () => _addTask(provider),
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(String message, IconData icon) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 60, color: Colors.grey[400]),
+          const SizedBox(height: 8),
+          Text(message, style: const TextStyle(color: Colors.grey)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDismissBackground() {
+    return Container(
+      color: Colors.redAccent,
+      alignment: Alignment.centerRight,
+      padding: const EdgeInsets.only(right: 20),
+      child: const Icon(Icons.delete, color: Colors.white, size: 30),
     );
   }
 }
